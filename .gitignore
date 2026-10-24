@@ -1,0 +1,55 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# --- Virtual environments (never commit; recreate with scripts/setup_*.{ps1,sh}) ---
+.venv/
+venv/
+env/
+
+# --- Editors / OS metadata ---
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Secrets (never commit) ---
+.env
+.env.*
+*.pem
+*.key
+secrets.*
+
+# --- Data: downloaded at run time from the original publication (no explicit
+#     licence for redistribution); only the README files are versioned. ---
+data/raw/*
+!data/raw/README.md
+data/processed/*
+!data/processed/README.md
+data/external/*
+!data/external/README.md
+
+# --- Generated artefacts (re-create with the pipeline) ---
+models/*
+!models/README.md
+outputs/*
+!outputs/README.md
+reports/*
+!reports/README.md
+
+# --- Temporary files ---
+*.tmp
+*.part
+*.checksum-mismatch
+*.log

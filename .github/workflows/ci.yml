@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Unit tests (Ubuntu, Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: Install dependencies and package
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install -e .
+      - name: Import and CLI smoke checks
+        run: |
+          python -c "import xanthomonas_ml; print(xanthomonas_ml.__version__)"
+          python -m xanthomonas_ml --help
+          python -m xanthomonas_ml check-env
+          bash -n scripts/setup_ubuntu.sh
+          bash -n scripts/run_pipeline.sh
+      - name: Unit tests (synthetic fixtures; real-data tests are skipped here)
+        run: python -m pytest -ra
+
+  real-data:
+    # Separate job: downloads the ~1 MB published dataset from GitLab and runs
+    # the whole pipeline with --quick settings on Ubuntu (headless plotting).
+    name: Real-data pipeline smoke run (Ubuntu)
+    needs: tests
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Set up with the project's Ubuntu script
+        run: bash scripts/setup_ubuntu.sh
+      - name: Download, validate and prepare the published data
+        run: |
+          .venv/bin/python -m xanthomonas_ml download-data
+          .venv/bin/python -m xanthomonas_ml validate-data
+          .venv/bin/python -m xanthomonas_ml prepare-data
+      - name: EDA, quick training, interpretation, report
+        run: |
+          .venv/bin/python -m xanthomonas_ml eda
+          .venv/bin/python -m xanthomonas_ml train --quick
+          .venv/bin/python -m xanthomonas_ml interpret
+          .venv/bin/python -m xanthomonas_ml report
+          .venv/bin/python -m xanthomonas_ml show-best
+      - name: Prediction from a feature file
+        run: |
+          .venv/bin/python - <<'EOF'
+          import pandas as pd
+          pd.read_csv("data/processed/features.csv.gz").head(3).to_csv("three_strains.csv", index=False)
+          EOF
+          .venv/bin/python -m xanthomonas_ml predict --input three_strains.csv --output outputs/predictions/ci.csv
+      - name: Real-data integration tests
+        run: .venv/bin/python -m pytest -m realdata -ra
+      - name: Upload smoke-run outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: quick-run-outputs
+          path: |
+            reports/
+            outputs/figures/
+            outputs/results/metrics_summary.csv
+          retention-days: 7

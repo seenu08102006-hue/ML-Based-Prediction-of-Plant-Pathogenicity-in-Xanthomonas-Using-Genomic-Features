@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xanthomonas-ml"
+version = "0.1.0"
+description = "ML-based prediction of the plant-pathogenic phenotype of Xanthomonas strains from Pfam protein-domain presence/absence profiles."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Balam Lakshmi Sreenivas" }]
+keywords = ["bioinformatics", "machine-learning", "Xanthomonas", "Pfam", "plant-pathogen"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+dependencies = [
+    "numpy>=1.26",
+    "pandas>=2.1",
+    "scikit-learn>=1.4",
+    "scipy>=1.11",
+    "matplotlib>=3.8",
+    "PyYAML>=6.0",
+    "joblib>=1.3",
+    "requests>=2.31",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8.0"]
+
+[project.scripts]
+xanthomonas-ml = "xanthomonas_ml.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+markers = [
+    "realdata: tests that need the authentic published dataset in data/raw (skipped when absent)",
+]

@@ -1,0 +1,54 @@
+cff-version: 1.2.0
+message: >-
+  If you use this software, please cite it and, above all, the original study and
+  data on which it is based (see "references").
+title: "ML-Based Prediction of Plant Pathogenicity in Xanthomonas Using Genomic Features"
+type: software
+version: 0.1.0
+authors:
+  - given-names: Balam Lakshmi
+    family-names: Sreenivas
+repository-code: "https://github.com/seenu08102006-hue/ML-Based-Prediction-of-Plant-Pathogenicity-in-Xanthomonas-Using-Genomic-Features"
+keywords:
+  - Xanthomonas
+  - plant pathogen
+  - Pfam
+  - machine learning
+  - bioinformatics
+references:
+  - type: article
+    title: "Machine learning approaches to predict the plant-associated phenotype of Xanthomonas strains"
+    authors:
+      - family-names: te Molder
+        given-names: Dennie
+      - family-names: Poncheewin
+        given-names: Wasin
+      - family-names: Schaap
+        given-names: Peter J.
+      - family-names: Koehorst
+        given-names: Jasper J.
+    journal: "BMC Genomics"
+    volume: 22
+    start: 848
+    year: 2021
+    doi: "10.1186/s12864-021-08093-0"
+  - type: dataset
+    title: "Annotated genomes used in the publication: Machine learning approaches to predict the plant-associated phenotype of Xanthomonas strains"
+    authors:
+      - family-names: Koehorst
+        given-names: Jasper J.
+      - family-names: Poncheewin
+        given-names: Wasin
+      - family-names: Schaap
+        given-names: Peter J.
+      - family-names: te Molder
+        given-names: Dennie
+    doi: "10.4121/14546625"
+    year: 2021
+  - type: software-code
+    title: "Xanthomonas phenotype prediction"
+    authors:
+      - family-names: te Molder
+        given-names: Dennie
+    repository-code: "https://gitlab.com/wurssb/xanthomonas-phenotype-prediction"
+    year: 2021

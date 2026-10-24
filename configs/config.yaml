@@ -1,0 +1,101 @@
+# Central configuration for the Xanthomonas pathogenicity pipeline.
+# All relative paths are resolved against the project root (the parent of
+# this configs/ directory), so the same file works on Windows and Ubuntu.
+
+seed: 42
+
+paths:
+  raw_data: data/raw
+  processed_data: data/processed
+  models: models
+  outputs: outputs        # figures and tables
+  reports: reports
+
+# Published source of the authentic data (te Molder et al., 2021, BMC Genomics
+# 22:848). Files are pinned to an exact commit of the authors' GitLab repository
+# and verified by SHA-256 so that a silently changed upstream file is detected.
+dataset:
+  name: "te Molder et al. 2021 Xanthomonas Pfam domain matrix"
+  repository: "https://gitlab.com/wurssb/xanthomonas-phenotype-prediction"
+  commit: "1820d031e38cc9fffee8c7fc4526890a5be5ff42"
+  base_url: "https://gitlab.com/wurssb/xanthomonas-phenotype-prediction/-/raw/{commit}/Rcode/Data/{filename}"
+  files:
+    domain_matrix:
+      filename: domain_matrix.csv
+      sha256: eb7f81c539829c39b2c2582c64ded449fec00a6c01c50d4cfa5a67b4935665ad
+      role: "Binary Pfam domain presence/absence matrix (rows = genome assemblies by GenBank accession 'gca', columns = Pfam accessions)"
+      required: true
+    genome_information:
+      filename: genome_information.csv
+      sha256: 530c223e583f6187bd6c525c8b83d1d0bb0116d76d75ec058616fb6828277e47
+      role: "Per-genome metadata, including the curated 'pathogenicity' phenotype label, keyed by 'gca'"
+      required: true
+    domain_descriptions:
+      filename: domain_descriptions.csv
+      sha256: 1a42e8002c937ea5aa91ad6c29381b885d25c8457ee206ce30f65a0cfd2761d7
+      role: "Human-readable descriptions of Pfam accessions (used only for interpretation tables)"
+      required: false
+  sample_id_column: gca
+  label_column: pathogenicity
+
+labels:
+  # Only these source labels enter the binary analysis. Any other value
+  # (e.g. 'unknown') is excluded and recorded, never silently re-mapped.
+  positive: pathogenic          # encoded as 1 (positive class, as in the paper)
+  negative: non-pathogenic      # encoded as 0
+  # The study concerns the genus Xanthomonas; the source contains one Xylella
+  # genome labelled 'unknown' that is excluded by this filter as well.
+  required_genus: Xanthomonas
+
+preprocessing:
+  # Fitted INSIDE each training fold (never on the full dataset):
+  # remove domains present in > max or < min fraction of the training strains
+  # (the paper used 97.5% / 2.5%) ...
+  min_prevalence: 0.025
+  max_prevalence: 0.975
+  # ... then remove one of every pair of domains with |Pearson r| > threshold
+  # (the paper used 0.8). Set to null to disable.
+  correlation_threshold: 0.8
+
+cv:
+  # Outer loop: performance estimation. Inner loop: hyper-parameter selection.
+  # The paper used 20x repeated 5-fold (outer) and 4x repeated 10-fold (inner);
+  # the defaults below are smaller to keep runtime reasonable on a laptop.
+  outer_folds: 5
+  outer_repeats: 10
+  inner_folds: 5
+  # Additional, stricter estimate where all strains of a species are held out
+  # together (StratifiedGroupKFold by species). Set to false to skip.
+  species_grouped: true
+  species_grouped_folds: 5
+  # Optional stratified held-out test fraction (0 disables). With ~118 strains
+  # a single split is noisy, so nested CV is the primary estimate.
+  holdout_fraction: 0.0
+  n_jobs: -1
+
+models:
+  decision_tree:
+    enabled: true
+    param_grid:
+      clf__ccp_alpha: [0.0, 0.005, 0.01, 0.02, 0.05]
+      clf__max_depth: [2, 3, 5, null]
+  l1_logistic_regression:
+    enabled: true
+    param_grid:
+      clf__C: [0.03, 0.1, 0.3, 1.0, 3.0, 10.0]
+  random_forest:
+    enabled: true
+    n_estimators: 500
+    param_grid:
+      clf__max_features: ["sqrt", 0.1, 0.3]
+      clf__min_samples_leaf: [1, 3]
+
+# Metric used to choose hyper-parameters in the inner loop and to rank models.
+selection_metric: balanced_accuracy
+
+interpretation:
+  top_n: 25
+  # Held-out permutation importance: for each outer fold of the stratified
+  # design, permute each of the fold model's top-k domains in the held-out fold.
+  permutation_top_k: 10
+  permutation_repeats: 5

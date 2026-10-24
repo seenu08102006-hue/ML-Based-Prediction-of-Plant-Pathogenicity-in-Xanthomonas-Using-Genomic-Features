@@ -1,0 +1,11 @@
+# Normalise line endings in the repository; check out text files natively,
+# except shell scripts, which must keep LF to run on Ubuntu.
+* text=auto
+*.sh text eol=lf
+*.py text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.ps1 text eol=crlf
+*.png binary
+*.joblib binary
+*.gz binary
